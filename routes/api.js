@@ -31,6 +31,8 @@ router.get('/:table_name', function(req, res, next) {
 			res.json({ "errors": false, "data": data });
 		}else{ res.json({ "errors": true, "description": "Something is wrong!" }); }
 	});
+
+	connection.end();
 });
 
 module.exports = router;
