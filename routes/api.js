@@ -46,8 +46,27 @@ router.get('/:table_name', function(req, res, next) {
 });
 
 router.post('/datahub', function(req,res){
-	console.log(req.body);
-	res.json({"errors":false});
+
+	var connection = null;
+	var table_name = req.body.table_name, data = req.body, config_data;
+	if(data.table_name){delete data.table_name;}
+	
+	// set db connection params
+	config_data = JSON.parse(fs.readFileSync(db_conf,'utf8'));
+	connection = mysql.createConnection({host:config_data.development.host,user:config_data.development.db_username,password:config_data.development.db_password,database:config_data.development.db_name});
+	connection.connect();
+	
+	// save data into table
+	connection.query('INSERT INTO '+table_name+' SET ?',data,function(err,result){
+		if(err){
+			console.log(err);
+			res.json({'errors': true, 'description': 'Houston we have problems'});	
+		} else{ 
+			res.json({'identifier':result.insertId, 'errors': false});	 
+		}
+	});
+
+	connection.end();
 });
 
 module.exports = router;
