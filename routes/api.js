@@ -45,4 +45,9 @@ router.get('/:table_name', function(req, res, next) {
 	connection.end();
 });
 
+router.post('/datahub', function(req,res){
+	console.log(req.body);
+	res.json({"errors":false});
+});
+
 module.exports = router;
