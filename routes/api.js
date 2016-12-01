@@ -45,6 +45,33 @@ router.get('/:table_name', function(req, res, next) {
 	connection.end();
 });
 
+router.post('/getData', function(req,res){
+
+	var connection = null, table_name = req.body.table_name, id = req.body.id, config_data = null, sql = "", data = {};
+	
+	// set db connection params
+	config_data = JSON.parse(fs.readFileSync(db_conf,'utf8'));
+	connection = mysql.createConnection({host:config_data.development.host,user:config_data.development.db_username,password:config_data.development.db_password,database:config_data.development.db_name});
+	connection.connect();
+
+	sql = "SELECT * FROM "+table_name+" WHERE id = "+id;
+
+	connection.query(sql, function(err, row){
+		// check if we have some trouble
+		if(err){console.log(err); throw err; }
+		
+		// basically if all this ok we will receive an object as query response
+		if(typeof row === "object" &&  (row.length == 1 && typeof row[0] == "object") ){
+			for(var key in row[0]){
+				if(row[0].hasOwnProperty(key)){ data[key] = row[0][key]; }
+			}
+			res.json({'errors':false, 'fields':data});
+		}else{ res.json({'errors':true, 'fields':data}); }
+	});
+
+	connection.end();
+});
+
 router.post('/datahub', function(req,res){
 
 	var connection = null;
