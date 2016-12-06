@@ -75,25 +75,46 @@ router.post('/getData', function(req,res){
 router.post('/datahub', function(req,res){
 
 	var connection = null;
-	var table_name = req.body.table_name, data = req.body, config_data;
-	if(data.table_name){delete data.table_name;}
+	var table_name = req.body.table_name, action_type = req.body.action_type, user_id = req.body.user_identifier, data = req.body, config_data = null;
+	if(data.table_name){delete data.table_name; delete data.action_type; delete data.user_identifier;}
 	
-	// set db connection params
-	config_data = JSON.parse(fs.readFileSync(db_conf,'utf8'));
-	connection = mysql.createConnection({host:config_data.development.host,user:config_data.development.db_username,password:config_data.development.db_password,database:config_data.development.db_name});
-	connection.connect();
-	
-	// save data into table
-	connection.query('INSERT INTO '+table_name+' SET ?',data,function(err,result){
-		if(err){
-			console.log(err);
-			res.json({'errors': true, 'description': 'Houston we have problems'});	
-		} else{ 
-			res.json({'identifier':result.insertId, 'errors': false});	 
-		}
-	});
+	console.log(req.body);
 
-	connection.end();
+	if(action_type){
+
+		// set db connection params
+		config_data = JSON.parse(fs.readFileSync(db_conf,'utf8'));
+		connection = mysql.createConnection({host:config_data.development.host,user:config_data.development.db_username,password:config_data.development.db_password,database:config_data.development.db_name});
+		connection.connect();
+
+		switch(action_type){
+			case 'insert':
+				// save data into table
+				connection.query('INSERT INTO '+table_name+' SET ?',data,function(err,result){
+					if(err){
+						console.log(err);
+						res.json({'errors': true, 'description': 'Houston we have problems'});	
+					} else{ 
+						res.json({'identifier':result.insertId, 'errors': false});	 
+					}
+				});
+			break;
+			case 'update':
+				// update data into table
+				connection.query('UPDATE '+table_name+' SET ? WHERE id = '+user_id,data,function(err,result){
+					if(err){
+						console.log(err);
+						res.json({'errors': true, 'description': 'Houston we have problems'});	
+					} else{ 
+						res.json({'identifier':result.affectedRows, 'errors': false});	 
+					}
+				});
+			break;
+		}
+
+		connection.end();
+
+	}
 });
 
 module.exports = router;
