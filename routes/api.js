@@ -36,7 +36,7 @@ router.get('/:table_name', function(req, res, next) {
 					// case: the 'length' property is null or not exists.
 					if( parenthesis_start == -1 && parenthesis_end == -1 ){
 						data.push({
-							'field':(rows[x].Field).replace(/\s/g,''),
+							'field_name':(rows[x].Field).replace(/\s/g,''),
 							'field_type':rows[x].Type,
 							'field_length':200
 						});
