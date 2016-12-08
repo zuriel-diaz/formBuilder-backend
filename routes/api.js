@@ -25,16 +25,33 @@ router.get('/:table_name', function(req, res, next) {
 				// move to next value Only if current_field is primary key
 				if(rows[x].Key !== 'PRI'){
 
-					// get field length
-					var parenthesis_start =  rows[x].Type.indexOf('('), parenthesis_end = rows[x].Type.indexOf(')'), field_length = 0;
-					field_length = (rows[x].Type.substring( (parenthesis_start+1),parenthesis_end )).replace(/\s/g,'');
+					/*
+					*  There are some fields that do not has 'length' property, 
+					*  so basically we need to validate it, and get 'type' property 
+					*  and set a default 'length' property value.
+					*/
 
-					// removing whitespaces
-					data.push({
-						'field_name':(rows[x].Field).replace(/\s/g,''),
-						'field_type':(rows[x].Type.substring(0,parenthesis_start)).replace(/\s/g,''),
-						'field_length':parseInt(field_length)
-					});
+					var parenthesis_start =  rows[x].Type.indexOf('('), parenthesis_end = rows[x].Type.indexOf(')'), field_length = 0;
+					
+					// case: the 'length' property is null or not exists.
+					if( parenthesis_start == -1 && parenthesis_end == -1 ){
+						data.push({
+							'field':(rows[x].Field).replace(/\s/g,''),
+							'field_type':rows[x].Type,
+							'field_length':200
+						});
+					}
+					// case: the 'length' property exist and basically we need to get 'type' & 'length' property.
+					else{
+						field_length = (rows[x].Type.substring( (parenthesis_start+1),parenthesis_end )).replace(/\s/g,'');
+
+						// removing whitespaces
+						data.push({
+							'field_name':(rows[x].Field).replace(/\s/g,''),
+							'field_type':(rows[x].Type.substring(0,parenthesis_start)).replace(/\s/g,''),
+							'field_length':parseInt(field_length)
+						});
+					}
 				} 
 			}
 			// print data
