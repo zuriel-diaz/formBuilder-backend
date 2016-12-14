@@ -118,7 +118,7 @@ router.post('/datahub', function(req,res){
 
 		switch(action_type){
 			case 'insert':
-				// save data into table
+				// save data into table (data is an object with fields to be modified).
 				connection.query('INSERT INTO '+table_name+' SET ?',data,function(err,result){
 					if(err){
 						console.log(err);
@@ -129,7 +129,7 @@ router.post('/datahub', function(req,res){
 				});
 			break;
 			case 'update':
-				// update data into table
+				// update data into table (data is an object with fields to be modified).
 				connection.query('UPDATE '+table_name+' SET ? WHERE id = '+user_id,data,function(err,result){
 					if(err){
 						console.log(err);
