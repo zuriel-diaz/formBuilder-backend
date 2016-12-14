@@ -64,26 +64,38 @@ router.get('/:table_name', function(req, res, next) {
 
 router.post('/getData', function(req,res){
 
-	var connection = null, table_name = req.body.table_name, id = req.body.id, config_data = null, sql = "", data = {};
-	
+	var connection = null, table_name = req.body.table_name, config_data = null, sql = "", data = [];
+	var id = (req.body.id) ? req.body.id : null;
 	// set db connection params
 	config_data = JSON.parse(fs.readFileSync(db_conf,'utf8'));
 	connection = mysql.createConnection({host:config_data.development.host,user:config_data.development.db_username,password:config_data.development.db_password,database:config_data.development.db_name});
 	connection.connect();
 
-	sql = "SELECT * FROM "+table_name+" WHERE id = "+id;
+	sql = "SELECT * FROM "+table_name;
+	
+	// Check if current request has identifier, if this is true we need to get this field and update SQL sentence. 
+	if( req.body.id !== undefined && req.body.id !== null ){ sql +=" WHERE id = "+req.body.id; }
 
-	connection.query(sql, function(err, row){
+	connection.query(sql, function(err, result){
 		// check if we have some trouble
 		if(err){console.log(err); throw err; }
 		
-		// basically if all this ok we will receive an object as query response
-		if(typeof row === "object" &&  (row.length == 1 && typeof row[0] == "object") ){
-			for(var key in row[0]){
-				if(row[0].hasOwnProperty(key)){ data[key] = row[0][key]; }
+		// basically if all this is ok we will receive an object as query response
+		if(typeof result === "object" && result.length == 1){
+			var temp = {};
+			for(var key in result[0]){ if(result[0].hasOwnProperty(key)){ temp[key] = result[0][key]; } }
+			data.push(temp);
+			res.json({'errors':false, 'fields':data});
+		}else if(typeof result === "object" && result.length > 1){
+			for (var position = 0; position < result.length; position++){
+				var temp = {};
+				for(var key in result[position]){
+					if(result[position].hasOwnProperty(key)){ temp[key] = result[position][key]; }
+				}
+				data.push(temp);	
 			}
 			res.json({'errors':false, 'fields':data});
-		}else{ res.json({'errors':true, 'fields':data}); }
+		}else{ res.json({'errors':true, 'description': 'we do not have data. length:'+result.length ,'fields':data}); }
 	});
 
 	connection.end();
